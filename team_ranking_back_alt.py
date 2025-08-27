@@ -5,40 +5,47 @@ import os
 from datetime import datetime, timedelta
 from io import BytesIO
 
-from flask import Flask, render_template, request, send_file, jsonify, redirect
+from flask import Flask, render_template, request, send_file, jsonify
+from jinja2 import TemplateNotFound
 import requests
 
-from team_ranking_alt import fetch_team_rankings  # ← 파일명 변경 반영
+from team_ranking_alt import fetch_team_rankings
+from shorts_back_alt import shorts_bp  # ✅ 숏츠 블루프린트 등록
 
-app = Flask(__name__, template_folder="templates")
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+app = Flask(__name__, template_folder=os.path.join(BASE_DIR, "templates"))
+app.register_blueprint(shorts_bp)  # ✅ /shorts, /shorts/ping 활성화
 
-# ---- 간단 캐시 (콜드스타트/타임아웃 완화) ----
+# ---- 간단 캐시 ----
 CACHE_TTL_MIN = int(os.environ.get("CACHE_TTL_MIN", "10"))
-_cache_data = {"rankings": [], "updated_at": None}  # type: ignore[assignment]
+_cache = {"rankings": [], "ts": None}
 
-def _cache_stale() -> bool:
-    ts = _cache_data["updated_at"]
+def _stale() -> bool:
+    ts = _cache["ts"]
     if ts is None:
         return True
     return datetime.now() - ts > timedelta(minutes=CACHE_TTL_MIN)
 
 def _get_rankings():
-    if _cache_stale():
+    if _stale():
         try:
             data = fetch_team_rankings()
             if data:
-                _cache_data["rankings"] = data
-                _cache_data["updated_at"] = datetime.now()
+                _cache["rankings"] = data
+                _cache["ts"] = datetime.now()
         except Exception as e:
-            # 최초 실패 시에도 이전 캐시 유지
             print("[fetch_team_rankings] error:", e)
-    return _cache_data["rankings"]
+    return _cache["rankings"]
 
 # ---- 라우트 ----
 @app.route("/")
-def root():
-    # 루트로 들어오면 팀순위 페이지로 리다이렉트
-    return redirect("/team-ranking")
+def home():
+    # ✅ 이제는 대시보드(팀순위 + 숏츠) 페이지를 렌더
+    try:
+        return render_template("combined.html")
+    except TemplateNotFound:
+        # 템플릿이 없을 때 간단 링크 폴백
+        return '<p><a href="/team-ranking">팀 순위</a> · <a href="/shorts">숏츠</a></p>', 200
 
 @app.route("/healthz")
 def healthz():
@@ -47,14 +54,26 @@ def healthz():
 @app.route("/team-ranking")
 def show_ranking():
     rankings = _get_rankings()
-    # 선택 하이라이트가 필요한 템플릿이라면 아래 라인도 함께 넘겨 사용 가능
     selected_team = request.args.get("team", "")
-    return render_template("team_ranking_alt.html", rankings=rankings, selected_team=selected_team)
+    try:
+        # ✅ 현재 템플릿 파일명이 team_ranking_alt.html 이므로 그걸로 렌더
+        return render_template("team_ranking_alt.html", rankings=rankings, selected_team=selected_team)
+    except TemplateNotFound:
+        # 폴백 테이블
+        if not rankings:
+            return "<div>팀 순위 데이터가 아직 없습니다. 잠시 후 새로고침 해주세요.</div>", 200
+        cols = ["rank","team_name","wins","losses","draws","gb"]
+        head = "".join(f"<th>{c}</th>" for c in cols)
+        body = "".join(
+            "<tr>" + "".join(f"<td>{r.get(c,'')}</td>" for c in cols) + "</tr>"
+            for r in rankings
+        )
+        return f"<h3>팀 순위</h3><table border='1' cellpadding='6' cellspacing='0'><thead><tr>{head}</tr></thead><tbody>{body}</tbody></table>", 200
 
 @app.route("/team-ranking.json")
 def show_ranking_json():
     return jsonify({
-        "updated_at": _cache_data["updated_at"].isoformat() if _cache_data["updated_at"] else None,
+        "updated_at": _cache["ts"].isoformat() if _cache["ts"] else None,
         "rankings": _get_rankings()
     })
 
@@ -66,10 +85,8 @@ def proxy_logo():
     try:
         headers = {
             "Referer": "https://sports.naver.com",
-            "User-Agent": (
-                "Mozilla/5.0 (iPhone; CPU iPhone OS 15_0 like Mac OS X) "
-                "AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.0 Mobile/15E148 Safari/604.1"
-            ),
+            "User-Agent": ("Mozilla/5.0 (iPhone; CPU iPhone OS 15_0 like Mac OS X) "
+                           "AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.0 Mobile/15E148 Safari/604.1")
         }
         r = requests.get(url, headers=headers, timeout=8)
         if r.status_code != 200:
