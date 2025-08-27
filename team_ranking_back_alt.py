@@ -1,6 +1,8 @@
 # team_ranking_back_alt.py
 from __future__ import annotations
 
+ALLOWED_ORIGIN = os.environ.get("CORS_ALLOW_ORIGIN", "*")
+
 import os
 from datetime import datetime, timedelta
 from io import BytesIO
