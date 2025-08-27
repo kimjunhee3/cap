@@ -1,13 +1,12 @@
 <script>
 (function () {
-  // 1) URL 파라미터
+  // URL 파라미터
   const usp = new URLSearchParams(location.search);
   const urlTeam = (usp.get('team') || '').trim();
   const autoSelect = usp.get('auto_select') === '1';
   const isEmbed = usp.get('embed') === '1';
 
-  // 2) Netlify(App.js)에서 오는 팀 문자열을 템플릿의 팀 표기와 매칭
-  //   - 왼쪽: 슬러그/영문/변형, 오른쪽: 표에 그려진 팀명(네이버 표기)
+  // 슬러그 → 화면 표기명 매핑
   const mapToDisplay = {
     'KT':'KT','kt':'KT','wiz':'KT','ktwiz':'KT','케이티':'KT',
     'LG':'LG','lg':'LG','엘지':'LG',
@@ -20,53 +19,54 @@
     '삼성':'삼성','samsung':'삼성','Samsung':'삼성',
     '롯데':'롯데','lotte':'롯데','Lotte':'롯데','giants':'롯데'
   };
-  function toDisplayName(x) {
+  const toDisplayName = (x) => {
     if (!x) return '';
     const k = String(x).trim();
     return mapToDisplay[k] ?? mapToDisplay[k.toLowerCase()] ?? k;
-  }
+  };
 
-  // 3) 드롭다운과 테이블 하이라이트 동기화
+  // 임베드 모드 약간의 스타일
+  if (isEmbed) document.body.style.background = 'transparent';
+
+  // 높이 postMessage (항상 동작)
+  function postHeight() {
+    try {
+      const h = Math.max(
+        document.documentElement.scrollHeight || 0,
+        document.body.scrollHeight || 0,
+        600
+      );
+      parent.postMessage({ type: 'resize-team-ranking', height: h }, '*');
+    } catch (e) {}
+  }
+  window.addEventListener('load', postHeight);
+  window.addEventListener('resize', () => requestAnimationFrame(postHeight));
+  setTimeout(postHeight, 300);
+
+  // ✅ 여기서부터는 요소가 있을 때만 실행 (없으면 조용히 종료)
   const selectEl = document.getElementById('team-select');
+  if (!selectEl) {
+    console.warn('[team-ranking] #team-select not found — skipping init.');
+    return;
+  }
 
   function highlight(selected) {
     document.querySelectorAll('tbody tr').forEach(tr => {
       tr.classList.toggle('selected-row', tr.getAttribute('data-team') === selected);
     });
+    requestAnimationFrame(postHeight);
   }
 
-  // 드롭다운 변경 시 하이라이트
+  // 드롭다운 변경 이벤트 (요소가 있을 때만 등록)
   selectEl.addEventListener('change', function () {
     highlight(this.value);
-    requestAnimationFrame(postHeight);   // 높이 변경 전송
   });
 
-  // 4) ?team= 파라미터가 있고 auto_select=1이면 자동 선택
+  // 자동 선택
   const want = toDisplayName(urlTeam);
   if (autoSelect && want) {
     selectEl.value = want;
     highlight(want);
   }
-
-  // 5) 임베드 모드에서는 여백을 조금 줄이고(선택), 높이를 부모에 알림
-  if (isEmbed) {
-    document.body.style.background = 'transparent';
-    // 필요하면 UI 줄이기:
-    // document.querySelector('.ranking-title').style.display = 'none';
-  }
-
-  // 6) 부모(넷리파이)로 iframe 실제 높이 전달 → App.js가 수신해 height 조정
-  function postHeight() {
-    try {
-      const h = document.documentElement.scrollHeight || document.body.scrollHeight;
-      window.parent.postMessage({ type: 'resize-team-ranking', height: h }, '*');
-    } catch(e) {}
-  }
-  // 처음 로드/폰트 로드 후/윈도우 리사이즈 때마다 전송
-  window.addEventListener('load', postHeight);
-  window.addEventListener('resize', () => requestAnimationFrame(postHeight));
-  // 이미지/폰트 로딩 지연 대응
-  setTimeout(postHeight, 300);
 })();
 </script>
-
