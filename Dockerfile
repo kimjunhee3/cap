@@ -1,8 +1,10 @@
-# Dockerfile
 FROM python:3.10-slim
 
+# 로케일/폰트/타임존
 ENV LANG=C.UTF-8 LC_ALL=C.UTF-8 TZ=Asia/Seoul
 
+# Chromium & chromedriver & 한글 폰트 + 필요한 런타임 라이브러리
+# ⚠️ 주석은 RUN 블록 밖에만! 목록 중간에 # 넣지 마세요.
 RUN apt-get update && apt-get install -y --no-install-recommends \
     chromium \
     chromium-driver \
@@ -11,8 +13,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libxrandr2 libatk1.0-0 libatk-bridge2.0-0 libxdamage1 \
     libgbm1 libasound2 libpango-1.0-0 libcairo2 \
     libxshmfence1 libx11-xcb1 libdrm2 libxfixes3 \
-  && rm -rf /var/lib/apt/lists/*
+ && rm -rf /var/lib/apt/lists/*
 
+# 런타임 환경변수
 ENV PYTHONUNBUFFERED=1 \
     CHROME_BIN=/usr/bin/chromium \
     CHROMEDRIVER_BIN=/usr/bin/chromedriver \
@@ -20,11 +23,13 @@ ENV PYTHONUNBUFFERED=1 \
 
 WORKDIR /app
 
-COPY requirements.txt ./
+# 파이썬 패키지
+COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
+# 앱 소스
 COPY . .
 
-# 권장: wsgi 엔트리 사용
-CMD ["sh","-c","gunicorn -k gthread -w 1 -b 0.0.0.0:${PORT} wsgi:app --timeout 300 --log-level info"]
-
+# Gunicorn으로 team_ranking_back_alt:app 실행
+# (Railway가 PORT 주입 → ${PORT:-8000} 기본값)
+CMD ["sh","-c","gunicorn -k gthread team_ranking_back_alt:app -b 0.0.0.0:${PORT:-8000} --workers 1 --threads 2 --timeout 300 --log-level info"]
