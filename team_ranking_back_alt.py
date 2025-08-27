@@ -49,7 +49,7 @@ def show_ranking():
     rankings = _get_rankings()
     # 선택 하이라이트가 필요한 템플릿이라면 아래 라인도 함께 넘겨 사용 가능
     selected_team = request.args.get("team", "")
-    return render_template("team_ranking.html", rankings=rankings, selected_team=selected_team)
+    return render_template("team_ranking_alt.html", rankings=rankings, selected_team=selected_team)
 
 @app.route("/team-ranking.json")
 def show_ranking_json():
