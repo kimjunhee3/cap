@@ -1,72 +1,142 @@
-<script>
-(function () {
-  // URL 파라미터
-  const usp = new URLSearchParams(location.search);
-  const urlTeam = (usp.get('team') || '').trim();
-  const autoSelect = usp.get('auto_select') === '1';
-  const isEmbed = usp.get('embed') === '1';
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>KBO 팀순위 · v2025-08-28-02</title>
+  <style>
+    body { font-family: 'Noto Sans KR', Arial, sans-serif; background:#f8f9fa; margin:0; padding:0; }
+    .ranking-container { max-width: 360px; margin: 40px auto; background:#fff; border-radius:10px; box-shadow:0 2px 8px #ddd; padding:24px 0; }
+    .ranking-title { font-size:1.2em; font-weight:bold; margin:0 0 16px 24px; color:#222; }
+    .toolbar { margin:12px 0 16px 24px; }
+    table { width:90%; margin:0 auto; border-collapse:collapse; background:#fff; }
+    th, td { padding:8px 4px; text-align:center; vertical-align:middle; font-size:1em; }
+    th { background:#f8f9fa; color:#222; font-weight:bold; border-bottom:1px solid #e2e8f0; }
+    tr { border-bottom:1px solid #e2e8f0; }
+    tr:last-child { border-bottom:none; }
+    .team-logo { width:32px; height:32px; object-fit:contain; vertical-align:middle; margin-right:8px; }
+    .team-name { font-weight:bold; color:#222; font-size:1em; vertical-align:middle; }
+    .selected-row { background:#e3f2fd !important; }
+    @media (max-width:500px){ .ranking-container{max-width:100%; padding:8px 0;} table{width:98%;} th,td{font-size:.95em; padding:4px 2px} .team-logo{width:20px;height:20px;margin-right:4px} }
+  </style>
+</head>
+<body>
+  <div class="ranking-container">
+    <div class="ranking-title">팀순위</div>
 
-  // 슬러그 → 화면 표기명 매핑
-  const mapToDisplay = {
-    'KT':'KT','kt':'KT','wiz':'KT','ktwiz':'KT','케이티':'KT',
-    'LG':'LG','lg':'LG','엘지':'LG',
-    'KIA':'KIA','kia':'KIA','기아':'KIA',
-    'SSG':'SSG','ssg':'SSG','sk':'SSG','wyverns':'SSG','와이번스':'SSG','랜더스':'SSG',
-    'NC':'NC','nc':'NC','엔씨':'NC','dinos':'NC',
-    '두산':'두산','doosan':'두산','Doosan':'두산','ob':'두산',
-    '한화':'한화','hanwha':'한화','Hanwha':'한화',
-    '키움':'키움','kiwoom':'키움','히어로즈':'키움','넥센':'키움','woori':'키움',
-    '삼성':'삼성','samsung':'삼성','Samsung':'삼성',
-    '롯데':'롯데','lotte':'롯데','Lotte':'롯데','giants':'롯데'
-  };
-  const toDisplayName = (x) => {
-    if (!x) return '';
-    const k = String(x).trim();
-    return mapToDisplay[k] ?? mapToDisplay[k.toLowerCase()] ?? k;
-  };
+    <!-- 드롭다운이 “반드시” 존재하도록 id를 고정 -->
+    <div class="toolbar">
+      <select id="team-select">
+        <option value="">구단 선택</option>
+        {% for team in rankings %}
+        <option value="{{ team.team_name }}">{{ team.team_name }}</option>
+        {% endfor %}
+      </select>
+    </div>
 
-  // 임베드 모드 약간의 스타일
-  if (isEmbed) document.body.style.background = 'transparent';
+    <table>
+      <thead>
+        <tr>
+          <th>순위</th>
+          <th>팀</th>
+          <th>승</th>
+          <th>패</th>
+          <th>무</th>
+          <th>게임차</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for team in rankings %}
+        <tr data-team="{{ team.team_name }}">
+          <td>{{ team.rank }}</td>
+          <td>
+            <img class="team-logo" src="/proxy-logo?url={{ team.logo | urlencode }}" alt="{{ team.team_name }} 로고" loading="lazy" />
+            <span class="team-name">{{ team.team_name }}</span>
+          </td>
+          <td>{{ team.wins }}</td>
+          <td>{{ team.losses }}</td>
+          <td>{{ team.draws }}</td>
+          <td>{{ team.gb }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
 
-  // 높이 postMessage (항상 동작)
-  function postHeight() {
-    try {
-      const h = Math.max(
-        document.documentElement.scrollHeight || 0,
-        document.body.scrollHeight || 0,
-        600
-      );
-      parent.postMessage({ type: 'resize-team-ranking', height: h }, '*');
-    } catch (e) {}
-  }
-  window.addEventListener('load', postHeight);
-  window.addEventListener('resize', () => requestAnimationFrame(postHeight));
-  setTimeout(postHeight, 300);
+  <script>
+  (function () {
+    // ---- 공통: 높이 리포트 ----
+    function postHeight() {
+      try {
+        const h = Math.max(
+          document.documentElement.scrollHeight || 0,
+          document.body.scrollHeight || 0,
+          600
+        );
+        parent.postMessage({ type: 'resize-team-ranking', height: h }, '*');
+      } catch (e) {}
+    }
+    window.addEventListener('load', postHeight);
+    window.addEventListener('resize', () => requestAnimationFrame(postHeight));
+    setTimeout(postHeight, 300);
 
-  // ✅ 여기서부터는 요소가 있을 때만 실행 (없으면 조용히 종료)
-  const selectEl = document.getElementById('team-select');
-  if (!selectEl) {
-    console.warn('[team-ranking] #team-select not found — skipping init.');
-    return;
-  }
+    // ---- 파라미터 파싱 ----
+    const usp = new URLSearchParams(location.search);
+    const urlTeam = (usp.get('team') || '').trim();
+    const autoSelect = usp.get('auto_select') === '1';
+    const isEmbed = usp.get('embed') === '1';
+    if (isEmbed) document.body.style.background = 'transparent';
 
-  function highlight(selected) {
-    document.querySelectorAll('tbody tr').forEach(tr => {
-      tr.classList.toggle('selected-row', tr.getAttribute('data-team') === selected);
-    });
-    requestAnimationFrame(postHeight);
-  }
+    // ---- 슬러그 -> 화면 표기 매핑 ----
+    const mapToDisplay = {
+      'KT':'KT','kt':'KT','wiz':'KT','ktwiz':'KT','케이티':'KT',
+      'LG':'LG','lg':'LG','엘지':'LG',
+      'KIA':'KIA','kia':'KIA','기아':'KIA',
+      'SSG':'SSG','ssg':'SSG','sk':'SSG','wyverns':'SSG','와이번스':'SSG','랜더스':'SSG',
+      'NC':'NC','nc':'NC','엔씨':'NC','dinos':'NC',
+      '두산':'두산','doosan':'두산','Doosan':'두산','ob':'두산',
+      '한화':'한화','hanwha':'한화','Hanwha':'한화',
+      '키움':'키움','kiwoom':'키움','히어로즈':'키움','넥센':'키움','woori':'키움',
+      '삼성':'삼성','samsung':'삼성','Samsung':'삼성',
+      '롯데':'롯데','lotte':'롯데','Lotte':'롯데','giants':'롯데'
+    };
+    const toDisplayName = (x) => {
+      if (!x) return '';
+      const k = String(x).trim();
+      return mapToDisplay[k] ?? mapToDisplay[k.toLowerCase()] ?? k;
+    };
 
-  // 드롭다운 변경 이벤트 (요소가 있을 때만 등록)
-  selectEl.addEventListener('change', function () {
-    highlight(this.value);
-  });
+    // ---- 하이라이트 유틸 (드롭다운 유무와 무관하게 동작) ----
+    function highlightByName(name) {
+      const want = String(name || '').trim();
+      let matched = false;
+      document.querySelectorAll('tbody tr').forEach(tr => {
+        const ok = tr.getAttribute('data-team') === want;
+        tr.classList.toggle('selected-row', ok);
+        if (ok) matched = true;
+      });
+      requestAnimationFrame(postHeight);
+      return matched;
+    }
 
-  // 자동 선택
-  const want = toDisplayName(urlTeam);
-  if (autoSelect && want) {
-    selectEl.value = want;
-    highlight(want);
-  }
-})();
-</script>
+    // ---- 드롭다운 바인딩(있으면) + 자동선택 ----
+    const selectEl =
+      document.getElementById('team-select') ||
+      document.querySelector('.ranking-container select'); // id가 없더라도 안전
+
+    if (selectEl) {
+      selectEl.addEventListener('change', function () {
+        if (this && this.value != null) highlightByName(this.value);
+      });
+    }
+
+    // URL 파라미터 자동 선택: 드롭다운이 없더라도 표에서 바로 처리
+    const wantDisplay = toDisplayName(urlTeam);
+    if (autoSelect && wantDisplay) {
+      // select 동기화 (있을 때만)
+      if (selectEl) selectEl.value = wantDisplay;
+      highlightByName(wantDisplay);
+    }
+  })();
+  </script>
+</body>
+</html>
