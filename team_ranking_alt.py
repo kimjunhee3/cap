@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import os
 import platform
+import json  # ⬅️ 추가
 from typing import List, Dict
 
 from selenium import webdriver
@@ -13,6 +14,16 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from bs4 import BeautifulSoup
 
+# ⬇️ 추가: 강제 날짜(YYYY-MM-DD) & 캐시 파일 경로
+FORCE_RANK_DATE = os.environ.get("FORCE_RANK_DATE", "2025-09-20")  # ""(빈문자)이면 비활성화
+RANKINGS_CACHE_PATH = os.environ.get("RANKINGS_CACHE_PATH", "team_rankings_cache.json")
+
+def _load_rankings_cache() -> dict:
+    try:
+        with open(RANKINGS_CACHE_PATH, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return {}
 
 def _make_driver() -> webdriver.Chrome:
     """
@@ -42,8 +53,15 @@ def _make_driver() -> webdriver.Chrome:
     service = Service(os.getenv("CHROMEDRIVER_BIN", "/usr/bin/chromedriver"))
     return webdriver.Chrome(service=service, options=opts)
 
-
 def fetch_team_rankings() -> List[Dict[str, str]]:
+    # ⬇️ 강제 날짜가 있으면 크롤링 전에 캐시에서 바로 반환
+    if FORCE_RANK_DATE:
+        data = _load_rankings_cache()
+        rows = (data.get("by_date") or {}).get(FORCE_RANK_DATE, [])
+        # rows는 [{rank, team_name, logo, gb, wins, draws, losses}, ...] 형태
+        return rows if isinstance(rows, list) else []
+
+    # (강제 날짜가 없을 때만) 기존 크롤링 로직
     driver = _make_driver()
     url = "https://m.sports.naver.com/kbaseball/record/index"
     driver.get(url)
@@ -110,7 +128,6 @@ def fetch_team_rankings() -> List[Dict[str, str]]:
         )
 
     return data
-
 
 if __name__ == "__main__":
     for row in fetch_team_rankings():
