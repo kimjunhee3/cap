@@ -1,0 +1,195 @@
+{
+  "meta": {
+    "created_at": "2025-09-20T15:31:05+09:00",
+    "source": "Naver Sports Mobile",
+    "note": "by_date[YYYY-MM-DD] -> list of team rank rows {rank, team_name, logo, gb, wins, draws, losses}",
+    "last_updated_at": "2025-09-23T10:10:59+09:00",
+    "last_source_url": "https://m.sports.naver.com/kbaseball/record/index"
+  },
+  "by_date": {
+    "2025-09-20": [
+      {
+        "rank": "1",
+        "team_name": "LG",
+        "logo": "https://sports-phinf.pstatic.net/team/kbo/default/LG.png",
+        "gb": "0",
+        "wins": "83",
+        "draws": "3",
+        "losses": "50"
+      },
+      {
+        "rank": "2",
+        "team_name": "한화",
+        "logo": "https://sports-phinf.pstatic.net/team/kbo/default/HH.png",
+        "gb": "3",
+        "wins": "80",
+        "draws": "3",
+        "losses": "53"
+      },
+      {
+        "rank": "3",
+        "team_name": "SSG",
+        "logo": "https://sports-phinf.pstatic.net/team/kbo/default/SK.png",
+        "gb": "13.5",
+        "wins": "67",
+        "draws": "4",
+        "losses": "61"
+      },
+      {
+        "rank": "4",
+        "team_name": "삼성",
+        "logo": "https://sports-phinf.pstatic.net/team/kbo/default/SS.png",
+        "gb": "15",
+        "wins": "68",
+        "draws": "2",
+        "losses": "65"
+      },
+      {
+        "rank": "5",
+        "team_name": "롯데",
+        "logo": "https://sports-phinf.pstatic.net/team/kbo/default/LT.png",
+        "gb": "16.5",
+        "wins": "65",
+        "draws": "6",
+        "losses": "65"
+      },
+      {
+        "rank": "5",
+        "team_name": "KT",
+        "logo": "https://sports-phinf.pstatic.net/team/kbo/default/KT.png",
+        "gb": "16.5",
+        "wins": "66",
+        "draws": "4",
+        "losses": "66"
+      },
+      {
+        "rank": "7",
+        "team_name": "NC",
+        "logo": "https://sports-phinf.pstatic.net/team/kbo/default/NC.png",
+        "gb": "18.5",
+        "wins": "62",
+        "draws": "6",
+        "losses": "66"
+      },
+      {
+        "rank": "8",
+        "team_name": "KIA",
+        "logo": "https://sports-phinf.pstatic.net/team/kbo/default/HT.png",
+        "gb": "20.5",
+        "wins": "61",
+        "draws": "4",
+        "losses": "69"
+      },
+      {
+        "rank": "9",
+        "team_name": "두산",
+        "logo": "https://sports-phinf.pstatic.net/team/kbo/default/OB.png",
+        "gb": "24",
+        "wins": "57",
+        "draws": "6",
+        "losses": "72"
+      },
+      {
+        "rank": "10",
+        "team_name": "키움",
+        "logo": "https://sports-phinf.pstatic.net/team/kbo/default/WO.png",
+        "gb": "37.5",
+        "wins": "46",
+        "draws": "4",
+        "losses": "88"
+      }
+    ],
+    "2025-09-23": [
+      {
+        "rank": "1",
+        "team_name": "LG",
+        "logo": "https://sports-phinf.pstatic.net/team/kbo/default/LG.png",
+        "gb": "0",
+        "wins": "83",
+        "draws": "3",
+        "losses": "51"
+      },
+      {
+        "rank": "2",
+        "team_name": "한화",
+        "logo": "https://sports-phinf.pstatic.net/team/kbo/default/HH.png",
+        "gb": "3",
+        "wins": "80",
+        "draws": "3",
+        "losses": "54"
+      },
+      {
+        "rank": "3",
+        "team_name": "SSG",
+        "logo": "https://sports-phinf.pstatic.net/team/kbo/default/SK.png",
+        "gb": "12.5",
+        "wins": "69",
+        "draws": "4",
+        "losses": "62"
+      },
+      {
+        "rank": "4",
+        "team_name": "삼성",
+        "logo": "https://sports-phinf.pstatic.net/team/kbo/default/SS.png",
+        "gb": "14.5",
+        "wins": "69",
+        "draws": "2",
+        "losses": "66"
+      },
+      {
+        "rank": "5",
+        "team_name": "KT",
+        "logo": "https://sports-phinf.pstatic.net/team/kbo/default/KT.png",
+        "gb": "15",
+        "wins": "68",
+        "draws": "4",
+        "losses": "66"
+      },
+      {
+        "rank": "6",
+        "team_name": "롯데",
+        "logo": "https://sports-phinf.pstatic.net/team/kbo/default/LT.png",
+        "gb": "16.5",
+        "wins": "65",
+        "draws": "6",
+        "losses": "66"
+      },
+      {
+        "rank": "7",
+        "team_name": "NC",
+        "logo": "https://sports-phinf.pstatic.net/team/kbo/default/NC.png",
+        "gb": "18",
+        "wins": "63",
+        "draws": "6",
+        "losses": "67"
+      },
+      {
+        "rank": "8",
+        "team_name": "KIA",
+        "logo": "https://sports-phinf.pstatic.net/team/kbo/default/HT.png",
+        "gb": "20",
+        "wins": "62",
+        "draws": "4",
+        "losses": "70"
+      },
+      {
+        "rank": "9",
+        "team_name": "두산",
+        "logo": "https://sports-phinf.pstatic.net/team/kbo/default/OB.png",
+        "gb": "24",
+        "wins": "58",
+        "draws": "6",
+        "losses": "74"
+      },
+      {
+        "rank": "10",
+        "team_name": "키움",
+        "logo": "https://sports-phinf.pstatic.net/team/kbo/default/WO.png",
+        "gb": "36.5",
+        "wins": "47",
+        "draws": "4",
+        "losses": "88"
+      }
+    ]
+  }
+}
